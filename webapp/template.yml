@@ -1,0 +1,153 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'Deploy Serverless application using API Gateway, Lambda, and DynamoDB'
+
+Globals:
+  Function:
+    Timeout: 5
+    Runtime: nodejs12.x
+    Tracing: Active
+Resources:
+  mySNSTopic:
+    Type: 'AWS::SNS::Topic'
+  GetDataFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index-get.handler
+      CodeUri: src/
+      Runtime: nodejs12.x
+      AutoPublishAlias: live
+      DeploymentPreference:
+        # Type: AllAtOnce #CodeDeployDefault.LambdaCanary10Percent5Minutes
+        Type: CodeDeployDefault.LambdaCanary10Percent5Minutes
+        Hooks:
+          PreTraffic:
+            Ref: PreTraffic
+          PostTraffic:
+            Ref: PostTraffic
+        TriggerConfigurations:
+          - TriggerEvents:
+              - DeploymentSuccess
+              - DeploymentFailure
+            TriggerName: TestTrigger
+            TriggerTargetArn:
+              Ref: mySNSTopic
+      MemorySize: 128
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName:
+              Ref: MyDynamoDBTable
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: MyDynamoDBTable
+          REGION:
+            Ref: AWS::Region
+      Events:
+        GetDataFunctionApi:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: MyApi
+            Method: GET
+            Path: /clouds
+            TimeoutInMillis: 15000
+      Description: Get data from DynamoDB table
+  MyDynamoDBTable:
+    Type: 'AWS::DynamoDB::Table'
+    DeletionPolicy: Delete
+    Properties:
+      TableName:
+        Ref: 'AWS::StackName'
+      AttributeDefinitions:
+        - AttributeName: ServiceName
+          AttributeType: S
+        - AttributeName: id
+          AttributeType: 'N'
+      KeySchema:
+        - AttributeName: ServiceName
+          KeyType: HASH
+        - AttributeName: id
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+  MyApi:
+    Type: 'AWS::Serverless::HttpApi'
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+  PreTraffic:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: PreTraffic.lambdaHandler
+      FunctionName:
+        'Fn::Sub': >-
+          CodeDeployHook_PreTraffic_${AWS::StackName}
+      CodeUri: src/
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - 'codedeploy:PutLifecycleEventHookExecutionStatus'
+              Resource:
+                'Fn::Sub': >-
+                  arn:${AWS::Partition}:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${ServerlessDeploymentApplication}/*
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource: !Sub
+                - ${FunctionArn}:*
+                - FunctionArn: !GetAtt GetDataFunction.Arn
+      Runtime: nodejs12.x
+      DeploymentPreference:
+        Enabled: false
+      Environment:
+        Variables:
+          CurrentVersion:
+            Ref: GetDataFunction.Version
+
+  PostTraffic:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: PostTraffic.handler
+      FunctionName:
+        'Fn::Sub': >-
+          CodeDeployHook_PostTraffic_${AWS::StackName}
+      CodeUri: src/
+      DeploymentPreference:
+        Enabled: false
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+          - Effect: "Allow"
+            Action:
+              - "codedeploy:PutLifecycleEventHookExecutionStatus"
+            Resource:
+              !Sub 'arn:${AWS::Partition}:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${ServerlessDeploymentApplication}/*'
+
+
+Outputs:
+  GetDataFunctionApi:
+    Description: API Gateway endpoint URL for Data Listing Function
+    Value:
+      'Fn::Sub': 'https://${MyApi}.execute-api.${AWS::Region}.amazonaws.com/clouds'
+  LambdaFunctionUrl:
+    Description: URL for Lambda Get Function
+    Value:
+      'Fn::Sub': >-
+        https://console.aws.amazon.com/lambda/home?region=${AWS::Region}#/functions/${GetDataFunction}/aliases/live?tab=configuration
+  CodeDeployUrl:
+    Description: URL for CodeDeploy Deployments
+    Value:
+      'Fn::Sub': >-
+        https://console.aws.amazon.com/codesuite/codedeploy/deployments?region=${AWS::Region}
+  DynamoDBUrl:
+    Description: URL for DynamoDB CloudProviders table
+    Value:
+      'Fn::Sub': >-
+        https://console.aws.amazon.com/dynamodb/home?region=${AWS::Region}#tables:selected=${MyDynamoDBTable};tab=items

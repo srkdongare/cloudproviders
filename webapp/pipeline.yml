@@ -1,0 +1,527 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CodePipeline for Serverless CloudProvider App
+Parameters:
+  EmailAddress:
+    Description: Email Address for sending SNS notifications for CodeCommit
+    Type: String
+    Default: fake-email@fake-fake-fake-email.com
+  PipelineBucket:
+    Type: String
+    Description: S3Bucket
+  GitHubUser:
+    Type: String
+    Description: GitHub User
+    Default: "srkdongare"
+  GitHubRepo:
+    Type: String
+    Description: GitHub Repo to pull from. Only the Name. not the URL
+    Default: "cloudproviders"
+  GitHubBranch:
+    Type: String
+    Description: GitHub Branch
+    Default: "master"
+  GitHubToken:
+    NoEcho: true
+    Type: String
+    Default: '{{resolve:secretsmanager:github/personal-access-token:SecretString}}'
+    Description: Secret. It might look something like 9b189a1654643522561f7b3ebd44a1531a4287af OAuthToken with access to Repo. Go to https://github.com/settings/tokens
+Resources:
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+  MyLambdaTrustRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: "/"
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Effect: Allow
+            Resource: "*"
+          Version: '2012-10-17'
+        PolicyName: MyLambdaWorkerPolicy
+      RoleName: !Sub ${AWS::StackName}-lambda-${AWS::Region}
+    Type: AWS::IAM::Role
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - codebuild.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: codebuild-service
+        PolicyDocument:
+          Statement:
+          - Action:
+            - logs:DescribeLogStreams
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - lambda:AddPermission
+            - lambda:CreateFunction
+            - lambda:DeleteAlias
+            - lambda:DeleteFunction
+            - lambda:GetFunction
+            - lambda:GetFunctionConfiguration
+            - lambda:GetPolicy
+            - lambda:ListFunctions
+            - lambda:ListVersionsByFunction
+            - lambda:PublishVersion
+            - lambda:RemovePermission
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - apigateway:DeleteApi
+            - apigateway:DeleteStage
+            - apigateway:CreateStage
+            - apigateway:ImportApi
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - dynamodb:CreateTable
+            - dynamodb:DeleteTable
+            - dynamodb:DescribeTable
+            - dynamodb:PutItem
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - s3:*
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - codebuild:BatchGetBuilds
+            - codebuild:CreateProject
+            - codebuild:CreateReport
+            - codebuild:CreateReportGroup
+            - codebuild:DeleteProject
+            - codebuild:ListProjects
+            - codebuild:StartBuild
+            - codebuild:UpdateReport
+            - codebuild:BatchPutTestCases
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - cloudformation:CreateChangeSet
+            - cloudformation:CreateStack
+            - cloudformation:DeleteStack
+            - cloudformation:DescribeChangeSet
+            - cloudformation:DescribeStackEvents
+            - cloudformation:DescribeStacks
+            - cloudformation:DescribeStackResource
+            - cloudformation:DescribeStackResources
+            - cloudformation:ExecuteChangeSet
+            - cloudformation:GetTemplate
+            - cloudformation:GetTemplateSummary
+            Effect: Allow
+            Resource: "*"
+          Version: '2012-10-17'
+  MySNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+      - Endpoint:
+          Ref: EmailAddress
+        Protocol: email
+  CloudFormationTrustRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - cloudformation.amazonaws.com
+      Path: "/"
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:GetObjectVersion
+            Effect: Allow
+            Resource:
+            - Fn::Join:
+              - ''
+              - - 'arn:aws:s3:::'
+                - Ref: ArtifactBucket
+            - Fn::Join:
+              - ''
+              - - 'arn:aws:s3:::'
+                - Ref: ArtifactBucket
+                - "/*"
+          - Action:
+            - apigateway:ImportApi
+            - apigateway:CreateStage
+            - apigateway:Delete*
+            - apigateway:Put*
+            - apigateway:Post*
+            - apigateway:TagResource
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - codedeploy:*
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - sns:CreateTopic	
+            - sns:DeleteTopic
+            - sns:GetTopicAttributes
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - dynamodb:CreateTable	
+            - dynamodb:DeleteTable	
+            - dynamodb:DescribeTable	
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - codebuild:UpdateReport	
+            - codebuild:CreateReport
+            - codebuild:BatchPutTestCases
+            - codebuild:BatchGetBuilds
+            - codebuild:CreateReportGroup
+            - codebuild:StartBuild
+            - codebuild:DeleteBuild
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - logs:CreateLogStream	
+            - logs:CreateLogGroup
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - cloudwatch:*
+            - iam:*
+            - lambda:*
+            - s3:*
+            - events:*
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - iam:PassRole
+            Effect: Allow
+            Resource:
+            - Fn::GetAtt:
+              - MyLambdaTrustRole
+              - Arn
+          - Action:
+            - cloudformation:CreateChangeSet
+            Effect: Allow
+            Resource: "*"
+        PolicyName: CloudFormationRolePolicy
+    Type: AWS::IAM::Role
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - codepipeline.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: codepipeline-service
+        PolicyDocument:
+          Statement:
+          - Action:
+            - s3:*
+            Resource: "*"
+            Effect: Allow
+          - Action:
+            - iam:PassRole
+            Resource: "*"
+            Effect: Allow
+          - Action:
+            - cloudformation:DescribeStacks
+            - cloudformation:CreateChangeSet
+            - cloudformation:DescribeChangeSet
+            - cloudformation:ExecuteChangeSet
+            Resource: "*"
+            Effect: Allow
+          - Action:
+            - codebuild:BatchGetBuilds
+            - codebuild:StartBuild
+            Resource: "*"
+            Effect: Allow
+          Version: '2012-10-17'
+  CodeBuildGetDDBFunction:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Description: Build application
+      ServiceRole:
+        Fn::GetAtt:
+        - CodeBuildRole
+        - Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        EnvironmentVariables:
+        - Name: S3_BUCKET
+          Value: !Ref PipelineBucket
+        - Name: TABLE_NAME
+          Value: !Sub ${AWS::StackName}-${AWS::Region}
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
+      Source:
+        BuildSpec: webapp/buildspec-lambda.yml
+        Location: !Sub https://github.com/${GitHubUser}/${GitHubRepo}/
+        Type: GITHUB
+      TimeoutInMinutes: 10
+      Tags:
+      - Key: Owner
+        Value: MyCodeBuildProject
+  CodeBuildInsertData:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Description: Insert data into DynamoDB
+      ServiceRole:
+        Fn::GetAtt:
+        - CodeBuildRole
+        - Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        EnvironmentVariables:
+        - Name: S3_BUCKET
+          Value: !Ref PipelineBucket
+        - Name: TABLE_NAME
+          Value: !Sub ${AWS::StackName}-${AWS::Region}
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: "aws/codebuild/amazonlinux2-x86_64-standard:1.0"
+      Source:
+        BuildSpec: webapp/buildspec-insert-data.yml
+        Location: !Sub https://github.com/${GitHubUser}/${GitHubRepo}/
+        Type: GITHUB
+      TimeoutInMinutes: 10
+  CodeBuildApiTest:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Description: Test API using Postman
+      ServiceRole:
+        Fn::GetAtt:
+        - CodeBuildRole
+        - Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        EnvironmentVariables:
+        - Name: S3_BUCKET
+          Value: !Ref PipelineBucket
+        - Name: SAM_STACK_NAME
+          Type: PLAINTEXT
+          Value:
+            Fn::Sub: ${AWS::StackName}-${AWS::Region}
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: "aws/codebuild/amazonlinux2-x86_64-standard:1.0"
+      Source:
+        BuildSpec: webapp/buildspec-api-tests.yml
+        Location: !Sub https://github.com/${GitHubUser}/${GitHubRepo}/
+        Type: GITHUB
+      TimeoutInMinutes: 10
+  CodeBuildDiagrams:
+    Type: AWS::CodeBuild::Project
+    DependsOn: CodeBuildRole
+    Properties:
+      Name:
+        Ref: AWS::StackName
+      Description: Build application
+      ServiceRole:
+        Fn::GetAtt:
+        - CodeBuildRole
+        - Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: "aws/codebuild/amazonlinux2-x86_64-standard:1.0"
+        EnvironmentVariables:
+          - Name: S3_BUCKET
+            Type: PLAINTEXT
+            Value:
+              Fn::Sub: ${SiteBucket}
+          - Name: SAM_STACK_NAME
+            Type: PLAINTEXT
+            Value:
+              Fn::Sub: ${AWS::StackName}-${AWS::Region}
+      Source:
+        BuildSpec: webapp/buildspec-diagrams.yml
+        Location: !Sub https://github.com/${GitHubUser}/${GitHubRepo}/
+        Type: GITHUB
+      TimeoutInMinutes: 10
+      Tags:
+      - Key: Owner
+        Value: MyCodeBuildProject
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      Stages:
+      - Name: Source
+        Actions:
+        - InputArtifacts: []
+          Name: Source
+          ActionTypeId:
+            Category: Source
+            Owner: ThirdParty
+            Version: '1'
+            Provider: GitHub
+          OutputArtifacts:
+          - Name: MyApp
+          Configuration:
+            Owner: !Ref GitHubUser
+            Repo: !Ref GitHubRepo
+            Branch: !Ref GitHubBranch
+            OAuthToken: !Ref GitHubToken
+          RunOrder: 1
+      - Name: Build
+        Actions:
+        - InputArtifacts:
+          - Name: MyApp
+          Name: PackageSAM
+          ActionTypeId:
+            Category: Build
+            Owner: AWS
+            Version: '1'
+            Provider: CodeBuild
+          OutputArtifacts:
+          - Name: Lambda-Get-Artifact
+          Configuration:
+            ProjectName:
+              Ref: CodeBuildGetDDBFunction
+          RunOrder: 1
+        - InputArtifacts:
+          - Name: MyApp
+          Name: GenerateDiagrams
+          ActionTypeId:
+            Category: Test
+            Owner: AWS
+            Version: '1'
+            Provider: CodeBuild
+          OutputArtifacts: []
+          Configuration:
+            ProjectName:
+              Ref: CodeBuildDiagrams
+          RunOrder: 1
+      - Name: Deploy
+        Actions:
+        - InputArtifacts:
+          - Name: Lambda-Get-Artifact
+          Name: GenerateChangeSet
+          ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Version: '1'
+            Provider: CloudFormation
+          OutputArtifacts: []
+          Configuration:
+            ActionMode: CHANGE_SET_REPLACE
+            ChangeSetName: pipeline-changeset
+            RoleArn:
+              Fn::GetAtt:
+              - CloudFormationTrustRole
+              - Arn
+            Capabilities: CAPABILITY_IAM
+            StackName: !Sub ${AWS::StackName}-${AWS::Region}
+            TemplatePath: Lambda-Get-Artifact::template-export-get.json
+          RunOrder: 1
+        - ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Provider: CloudFormation
+            Version: "1"
+          Configuration:
+            ActionMode: CHANGE_SET_EXECUTE
+            ChangeSetName: pipeline-changeset
+            StackName: !Sub ${AWS::StackName}-${AWS::Region}
+          InputArtifacts: []
+          Name: ExecuteChangeSet
+          OutputArtifacts: []
+          RunOrder: 2
+        - InputArtifacts:
+          - Name: MyApp
+          Name: InsertData
+          ActionTypeId:
+            Category: Build
+            Owner: AWS
+            Version: '1'
+            Provider: CodeBuild
+          OutputArtifacts: []
+          Configuration:
+            ProjectName:
+              Ref: CodeBuildInsertData
+          RunOrder: 3
+        - InputArtifacts:
+          - Name: MyApp
+          Name: APITest
+          ActionTypeId:
+            Category: Build
+            Owner: AWS
+            Version: '1'
+            Provider: CodeBuild
+          OutputArtifacts: []
+          Configuration:
+            ProjectName:
+              Ref: CodeBuildApiTest
+          RunOrder: 4
+      ArtifactStore:
+        Type: S3
+        Location: !Ref PipelineBucket
+Outputs:
+  PipelineUrl:
+    Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${Pipeline}
+    Description: CodePipeline URL
+  DiagramWebAppUrl:
+    Value: !Sub https://${SiteBucket}.s3.amazonaws.com/serverless_web_apps.png
+    Description: Diagram for Serverless Web Apps
+  DiagramWorkflowUrl:
+    Value: !Sub https://${SiteBucket}.s3.amazonaws.com/serverless_web_app_workflow.png
+    Description: Diagram for Serverless Web Apps Simple Workflow
+  DiagramCanaryDeploymentsUrl:
+    Value: !Sub https://${SiteBucket}.s3.amazonaws.com/canary-deployments.png
+    Description: Diagram for Canary Deployment
+  LambdaTrustRole:
+    Description: IAM role for AWS Lambda used for passRole to Lambda functions.
+    Export:
+      Name: !Sub ${AWS::StackName}-${AWS::Region}-LambdaTrustRole
+    Value:
+      Fn::GetAtt:
+      - MyLambdaTrustRole
+      - Arn
