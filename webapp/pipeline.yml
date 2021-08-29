@@ -138,13 +138,6 @@ Resources:
             Effect: Allow
             Resource: "*"
           Version: '2012-10-17'
-  MySNSTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      Subscription:
-      - Endpoint:
-          Ref: EmailAddress
-        Protocol: email
   CloudFormationTrustRole:
     Properties:
       AssumeRolePolicyDocument:
@@ -271,10 +264,10 @@ Resources:
             Resource: "*"
             Effect: Allow
           Version: '2012-10-17'
-  CodeBuildGetDDBFunction:
+  CodeBuildProcessCoffeeFunction:
     Type: AWS::CodeBuild::Project
     Properties:
-      Description: Build application
+      Description: Build application CodeBuildProcessCoffeeFunction
       ServiceRole:
         Fn::GetAtt:
         - CodeBuildRole
@@ -298,97 +291,7 @@ Resources:
       Tags:
       - Key: Owner
         Value: MyCodeBuildProject
-  CodeBuildInsertData:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Description: Insert data into DynamoDB
-      ServiceRole:
-        Fn::GetAtt:
-        - CodeBuildRole
-        - Arn
-      Artifacts:
-        Type: NO_ARTIFACTS
-      Environment:
-        EnvironmentVariables:
-        - Name: S3_BUCKET
-          Value: !Ref PipelineBucket
-        - Name: TABLE_NAME
-          Value: !Sub ${AWS::StackName}-${AWS::Region}
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: "aws/codebuild/amazonlinux2-x86_64-standard:1.0"
-      Source:
-        BuildSpec: webapp/buildspec-insert-data.yml
-        Location: !Sub https://github.com/${GitHubUser}/${GitHubRepo}/
-        Type: GITHUB
-      TimeoutInMinutes: 10
-  CodeBuildApiTest:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Description: Test API using Postman
-      ServiceRole:
-        Fn::GetAtt:
-        - CodeBuildRole
-        - Arn
-      Artifacts:
-        Type: NO_ARTIFACTS
-      Environment:
-        EnvironmentVariables:
-        - Name: S3_BUCKET
-          Value: !Ref PipelineBucket
-        - Name: SAM_STACK_NAME
-          Type: PLAINTEXT
-          Value:
-            Fn::Sub: ${AWS::StackName}-${AWS::Region}
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: "aws/codebuild/amazonlinux2-x86_64-standard:1.0"
-      Source:
-        BuildSpec: webapp/buildspec-api-tests.yml
-        Location: !Sub https://github.com/${GitHubUser}/${GitHubRepo}/
-        Type: GITHUB
-      TimeoutInMinutes: 10
-  CodeBuildDiagrams:
-    Type: AWS::CodeBuild::Project
-    DependsOn: CodeBuildRole
-    Properties:
-      Name:
-        Ref: AWS::StackName
-      Description: Build application
-      ServiceRole:
-        Fn::GetAtt:
-        - CodeBuildRole
-        - Arn
-      Artifacts:
-        Type: NO_ARTIFACTS
-      Environment:
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: "aws/codebuild/amazonlinux2-x86_64-standard:1.0"
-        EnvironmentVariables:
-          - Name: S3_BUCKET
-            Type: PLAINTEXT
-            Value:
-              Fn::Sub: ${SiteBucket}
-          - Name: SAM_STACK_NAME
-            Type: PLAINTEXT
-            Value:
-              Fn::Sub: ${AWS::StackName}-${AWS::Region}
-      Source:
-        BuildSpec: webapp/buildspec-diagrams.yml
-        Location: !Sub https://github.com/${GitHubUser}/${GitHubRepo}/
-        Type: GITHUB
-      TimeoutInMinutes: 10
-      Tags:
-      - Key: Owner
-        Value: MyCodeBuildProject
-  SiteBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Delete
-    Properties:
-      AccessControl: PublicRead
-      WebsiteConfiguration:
-        IndexDocument: index.html
+  
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -425,21 +328,9 @@ Resources:
           - Name: Lambda-Get-Artifact
           Configuration:
             ProjectName:
-              Ref: CodeBuildGetDDBFunction
-          RunOrder: 1
-        - InputArtifacts:
-          - Name: MyApp
-          Name: GenerateDiagrams
-          ActionTypeId:
-            Category: Test
-            Owner: AWS
-            Version: '1'
-            Provider: CodeBuild
-          OutputArtifacts: []
-          Configuration:
-            ProjectName:
-              Ref: CodeBuildDiagrams
-          RunOrder: 1
+              Ref: CodeBuildProcessCoffeeFunction
+          RunOrder: 1  
+        
       - Name: Deploy
         Actions:
         - InputArtifacts:
@@ -475,32 +366,7 @@ Resources:
           Name: ExecuteChangeSet
           OutputArtifacts: []
           RunOrder: 2
-        - InputArtifacts:
-          - Name: MyApp
-          Name: InsertData
-          ActionTypeId:
-            Category: Build
-            Owner: AWS
-            Version: '1'
-            Provider: CodeBuild
-          OutputArtifacts: []
-          Configuration:
-            ProjectName:
-              Ref: CodeBuildInsertData
-          RunOrder: 3
-        - InputArtifacts:
-          - Name: MyApp
-          Name: APITest
-          ActionTypeId:
-            Category: Build
-            Owner: AWS
-            Version: '1'
-            Provider: CodeBuild
-          OutputArtifacts: []
-          Configuration:
-            ProjectName:
-              Ref: CodeBuildApiTest
-          RunOrder: 4
+        
       ArtifactStore:
         Type: S3
         Location: !Ref PipelineBucket
@@ -508,15 +374,6 @@ Outputs:
   PipelineUrl:
     Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${Pipeline}
     Description: CodePipeline URL
-  DiagramWebAppUrl:
-    Value: !Sub https://${SiteBucket}.s3.amazonaws.com/serverless_web_apps.png
-    Description: Diagram for Serverless Web Apps
-  DiagramWorkflowUrl:
-    Value: !Sub https://${SiteBucket}.s3.amazonaws.com/serverless_web_app_workflow.png
-    Description: Diagram for Serverless Web Apps Simple Workflow
-  DiagramCanaryDeploymentsUrl:
-    Value: !Sub https://${SiteBucket}.s3.amazonaws.com/canary-deployments.png
-    Description: Diagram for Canary Deployment
   LambdaTrustRole:
     Description: IAM role for AWS Lambda used for passRole to Lambda functions.
     Export:

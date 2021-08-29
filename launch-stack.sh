@@ -39,11 +39,11 @@ cd cloudproviders/webapp
 
 aws s3 mb s3://$S3BUCKET-$(aws sts get-caller-identity --output text --query 'Account')
 
-aws s3 cp collection.json \
-s3://$S3BUCKET-$(aws sts get-caller-identity --output text --query 'Account')/postman-env-files/collection.json
+# aws s3 cp collection.json \
+# s3://$S3BUCKET-$(aws sts get-caller-identity --output text --query 'Account')/postman-env-files/collection.json
 
-aws s3 cp postman_environment.json \
-s3://$S3BUCKET-$(aws sts get-caller-identity --output text --query 'Account')/postman-env-files/postman_environment.json
+# aws s3 cp postman_environment.json \
+# s3://$S3BUCKET-$(aws sts get-caller-identity --output text --query 'Account')/postman-env-files/postman_environment.json
 
 zip -r $S3BUCKET.zip .
 mkdir zipfiles
