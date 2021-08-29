@@ -7,6 +7,7 @@ phases:
   build:
     commands:
       # Build our go application
+      - cd webapp\src\coffee
       - go build -o main
 
       # Package our application with AWS SAM
