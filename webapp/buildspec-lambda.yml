@@ -6,8 +6,7 @@ phases:
       # Print all environment variables (handy for AWS CodeBuild logs)
       - env
 
-      # Install golint
-      - go get -u github.com/golang/lint/golint
+     
   build:
     commands:
       # Build our go application
