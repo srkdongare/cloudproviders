@@ -12,6 +12,7 @@ phases:
       # Build our go application
       - cd webapp/src/coffee
       - go build -o main
+      - cd ../../
 
       # Package our application with AWS SAM
       - aws cloudformation package --template-file template.yml --s3-bucket ${S3_BUCKET} --output-template-file packaged.yml
