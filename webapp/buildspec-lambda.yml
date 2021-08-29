@@ -1,10 +1,12 @@
 version: 0.2
-
 phases:
   install:
-    commands:
+    runtime-versions:
+      golang: 1.16
+  commands:
       # Print all environment variables (handy for AWS CodeBuild logs)
       - env
+  
 
      
   build:
