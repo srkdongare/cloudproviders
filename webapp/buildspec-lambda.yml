@@ -5,7 +5,7 @@ phases:
       golang: 1.13
     commands:
       - go get github.com/aws/aws-lambda-go/events
-	    - go get github.com/aws/aws-lambda-go/lambda
+      - go get github.com/aws/aws-lambda-go/lambda
 
   build:
     commands:
