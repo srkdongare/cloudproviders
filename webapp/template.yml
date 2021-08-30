@@ -12,7 +12,6 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: coffee/process-coffee
-      CodeUri: 
       Runtime: go1.x
       MemorySize: 128
       Policies:
