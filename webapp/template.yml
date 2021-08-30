@@ -55,6 +55,10 @@ Resources:
       KeySchema:
         - AttributeName: id
           KeyType: RANGE
+        - AttributeName: type
+          KeyType: RANGE
+        - AttributeName: tasty
+          KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
