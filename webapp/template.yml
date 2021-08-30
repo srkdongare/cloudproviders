@@ -50,15 +50,13 @@ Resources:
           AttributeType: 'N'
         - AttributeName: type
           AttributeType: S
-        - AttributeName: tasty
-          AttributeType: B
+       
       KeySchema:
         - AttributeName: id
           KeyType: RANGE
         - AttributeName: type
           KeyType: HASH
-        - AttributeName: tasty
-          KeyType: HASH
+        
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
