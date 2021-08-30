@@ -56,9 +56,9 @@ Resources:
         - AttributeName: id
           KeyType: RANGE
         - AttributeName: type
-          KeyType: RANGE
+          KeyType: HASH
         - AttributeName: tasty
-          KeyType: RANGE
+          KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
