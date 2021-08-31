@@ -27,13 +27,13 @@ Resources:
           Properties:
             Path: /coffee
             Method: get
-            RestApiId: !Ref MyApi
+            ApiId: !Ref MyApi
         PostCoffeeFunctionApi:
           Type: HttpApi
           Properties:
             Path: '/coffee/{id}'
             Method: post
-            RestApiId: !Ref MyApi
+            ApiId: !Ref MyApi
       Description: Get data from DynamoDB table
   
   MyDynamoDBTable:
@@ -58,7 +58,9 @@ Resources:
   MyApi:
     Type: 'AWS::Serverless::HttpApi'
     Properties:
-      Cors: '*' 
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
       
 Outputs:
   GetCoffeeFunctionApi:
