@@ -31,8 +31,8 @@ Resources:
             Path: /coffee
             Method: get
             TimeoutInMillis: 15000
-            Method: post
             Path: /coffee/{id}
+            Method: post
             TimeoutInMillis: 15000
             RestApiId:
               Ref: MyApi
