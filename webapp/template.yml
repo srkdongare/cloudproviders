@@ -26,7 +26,7 @@ Resources:
             Ref: AWS::Region
       Events:
         GetCoffeeFunctionApi:
-          Type: HttpApi
+          Type: Api
           Properties:
             ApiId:
               Ref: MyApi
