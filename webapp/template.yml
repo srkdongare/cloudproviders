@@ -28,14 +28,14 @@ Resources:
         GetCoffeeFunctionApi:
           Type: Api
           Properties:
-            RestApiId:
-              Ref: MyApi
-            Method: GET
             Path: /coffee
+            Method: get
             TimeoutInMillis: 15000
-            Method: POST
+            Method: post
             Path: /coffee/{id}
             TimeoutInMillis: 15000
+            RestApiId:
+              Ref: MyApi
       Description: Get data from DynamoDB table
   
     
