@@ -7,7 +7,12 @@ Globals:
     Timeout: 5
     Runtime: go1.x
     Tracing: Active
-Resources: 
+Resources:
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Cors: '*'
+
   ProcessCoffeeFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -65,10 +70,7 @@ Resources:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
   
-  MyApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      Cors: '*'
+  
   
 Outputs:
   GetCoffeeFunctionApi:
