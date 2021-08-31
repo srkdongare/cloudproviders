@@ -7,11 +7,7 @@ Globals:
     Runtime: go1.x
     Tracing: Active
 Resources:
-  MyApi:
-    Type: 'AWS::Serverless::Api'
-    StageName: Prod
-    Properties:
-      Cors: "'*'"
+  
   ProcessCoffeeFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -39,6 +35,7 @@ Resources:
             Method: post
             RestApiId: !Ref MyApi
       Description: Get data from DynamoDB table
+  
   MyDynamoDBTable:
     Type: 'AWS::DynamoDB::Table'
     DeletionPolicy: Delete
@@ -57,6 +54,13 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
+   
+  MyApi:
+    Type: 'AWS::Serverless::Api'
+    StageName: Prod
+    Properties:
+      Cors: "'*'" 
+      
 Outputs:
   GetCoffeeFunctionApi:
     Description: API Gateway endpoint URL
