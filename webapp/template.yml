@@ -1,7 +1,6 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: 2010-09-09
 Transform: 'AWS::Serverless-2016-10-31'
 Description: 'Deploy Serverless application using API Gateway, Lambda, and DynamoDB'
-
 Globals:
   Function:
     Timeout: 5
@@ -9,11 +8,10 @@ Globals:
     Tracing: Active
 Resources:
   MyApi:
-    Type: AWS::Serverless::Api
+    Type: 'AWS::Serverless::Api'
     StageName: Prod
     Properties:
       Cors: '*'
-
   ProcessCoffeeFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -22,77 +20,56 @@ Resources:
       MemorySize: 128
       Policies:
         - DynamoDBCrudPolicy:
-            TableName:
-              Ref: MyDynamoDBTable
+            TableName: !Ref MyDynamoDBTable
       Environment:
         Variables:
-          TABLE_NAME:
-            Ref: MyDynamoDBTable
-          REGION:
-            Ref: AWS::Region
+          TABLE_NAME: !Ref MyDynamoDBTable
+          REGION: !Ref 'AWS::Region'
       Events:
         GetCoffeeFunctionApi:
           Type: Api
           Properties:
             Path: /coffee
             Method: get
-            RestApiId:
-              Ref: MyApi
+            RestApiId: !Ref MyApi
         PostCoffeeFunctionApi:
           Type: Api
           Properties:
-            Path: /coffee/{id}
+            Path: '/coffee/{id}'
             Method: post
-            RestApiId:
-              Ref: MyApi
+            RestApiId: !Ref MyApi
       Description: Get data from DynamoDB table
-  
-    
   MyDynamoDBTable:
     Type: 'AWS::DynamoDB::Table'
     DeletionPolicy: Delete
     Properties:
-      TableName:
-        Ref: 'AWS::StackName'
+      TableName: !Ref 'AWS::StackName'
       AttributeDefinitions:
         - AttributeName: type
           AttributeType: S
         - AttributeName: id
-          AttributeType: 'N'        
-       
+          AttributeType: 'N'
       KeySchema:
         - AttributeName: type
           KeyType: HASH
         - AttributeName: id
           KeyType: RANGE
-        
-        
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
-  
-  
-  
 Outputs:
   GetCoffeeFunctionApi:
     Description: API Gateway endpoint URL
-    Value:
-      'Fn::Sub': 'https://${MyApi}.execute-api.${AWS::Region}.amazonaws.com'
-
+    Value: !Sub 'https://${MyApi}.execute-api.${AWS::Region}.amazonaws.com'
   LambdaFunctionUrl:
     Description: URL for Lambda Get Function
-    Value:
-      'Fn::Sub': >-
-        https://console.aws.amazon.com/lambda/home?region=${AWS::Region}#/functions/${ProcessCoffeeFunction}/aliases/live?tab=configuration
-
+    Value: !Sub >-
+      https://console.aws.amazon.com/lambda/home?region=${AWS::Region}#/functions/${ProcessCoffeeFunction}/aliases/live?tab=configuration
   CodeDeployUrl:
     Description: URL for CodeDeploy Deployments
-    Value:
-      'Fn::Sub': >-
-        https://console.aws.amazon.com/codesuite/codedeploy/deployments?region=${AWS::Region}
- 
+    Value: !Sub >-
+      https://console.aws.amazon.com/codesuite/codedeploy/deployments?region=${AWS::Region}
   DynamoDBUrl:
     Description: URL for DynamoDB CloudProviders table
-    Value:
-      'Fn::Sub': >-
-        https://console.aws.amazon.com/dynamodb/home?region=${AWS::Region}#tables:selected=${MyDynamoDBTable};tab=items
+    Value: !Sub >-
+      https://console.aws.amazon.com/dynamodb/home?region=${AWS::Region}#tables:selected=${MyDynamoDBTable};tab=items
