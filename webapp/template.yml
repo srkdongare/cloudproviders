@@ -6,8 +6,8 @@ Globals:
     Timeout: 5
     Runtime: go1.x
     Tracing: Active
+
 Resources:
-  
   ProcessCoffeeFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -23,13 +23,13 @@ Resources:
           REGION: !Ref 'AWS::Region'
       Events:
         GetCoffeeFunctionApi:
-          Type: Api
+          Type: HttpApi
           Properties:
             Path: /coffee
             Method: get
             RestApiId: !Ref MyApi
         PostCoffeeFunctionApi:
-          Type: Api
+          Type: HttpApi
           Properties:
             Path: '/coffee/{id}'
             Method: post
@@ -56,10 +56,9 @@ Resources:
         WriteCapacityUnits: 1
    
   MyApi:
-    Type: 'AWS::Serverless::Api'
-    StageName: Prod
+    Type: 'AWS::Serverless::HttpApi'
     Properties:
-      Cors: "'*'" 
+      Cors: '*' 
       
 Outputs:
   GetCoffeeFunctionApi:
