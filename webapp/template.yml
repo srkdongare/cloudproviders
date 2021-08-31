@@ -28,7 +28,7 @@ Resources:
         GetCoffeeFunctionApi:
           Type: Api
           Properties:
-            ApiId:
+            RestApiId:
               Ref: MyApi
             Method: GET
             Path: /coffee
