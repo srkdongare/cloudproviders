@@ -31,6 +31,11 @@ Resources:
             Path: /coffee
             Method: get
             TimeoutInMillis: 15000
+            RestApiId:
+              Ref: MyApi
+        PostCoffeeFunctionApi:
+          Type: Api
+          Properties:
             Path: /coffee/{id}
             Method: post
             TimeoutInMillis: 15000
@@ -63,7 +68,7 @@ Resources:
         WriteCapacityUnits: 1
   
   MyApi:
-    Type: 'AWS::Serverless::HttpApi'
+    Type: 'AWS::Serverless::Api'
     Properties:
       CorsConfiguration:
         AllowOrigins:
