@@ -11,7 +11,7 @@ Resources:
     Type: 'AWS::Serverless::Api'
     StageName: Prod
     Properties:
-      Cors: '*'
+      Cors: "'*'"
   ProcessCoffeeFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
