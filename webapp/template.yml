@@ -69,9 +69,13 @@ Resources:
     Properties:
       TableName: !Ref 'AWS::StackName'
       AttributeDefinitions:
+        - AttributeName: name
+          AttributeType: S
         - AttributeName: id
           AttributeType: 'N'
       KeySchema:
+        - AttributeName: name
+          KeyType: RANGE
         - AttributeName: id
           KeyType: RANGE
       ProvisionedThroughput:
