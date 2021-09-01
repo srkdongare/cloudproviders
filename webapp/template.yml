@@ -12,7 +12,6 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: prod
-  
   ProcessProductFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -35,7 +34,6 @@ Resources:
             Method: GET
             RestApiId:
               Ref: ApiGatewayApi
-
         GetSingleProductsAPI:
           Type: Api
           Properties:
@@ -43,7 +41,6 @@ Resources:
             Method: GET
             RestApiId:
               Ref: ApiGatewayApi
-
         PostProductsAPI:
           Type: Api
           Properties:
@@ -51,7 +48,6 @@ Resources:
             Method: POST
             RestApiId:
               Ref: ApiGatewayApi
-
         PutProductsAPI:
           Type: Api
           Properties:
@@ -59,7 +55,6 @@ Resources:
             Method: PUT
             RestApiId:
               Ref: ApiGatewayApi
-
         DeleteProductsAPI:
           Type: Api
           Properties:
@@ -67,8 +62,6 @@ Resources:
             Method: DELETE
             RestApiId:
               Ref: ApiGatewayApi
-
-  
   MyDynamoDBTable:
     Type: 'AWS::DynamoDB::Table'
     DeletionPolicy: Delete
