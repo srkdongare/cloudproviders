@@ -96,7 +96,7 @@ Resources:
           - Action:
             - apigateway:*
             Effect: Allow
-            Resource: "*"
+            Resource: "arn:aws:apigateway:*::/restapis*"
           - Action:
             - dynamodb:CreateTable
             - dynamodb:DeleteTable
@@ -165,7 +165,7 @@ Resources:
                 - "/*"
           - Action:  
             - apigateway:*
-            Resource: "*"
+            Resource: "arn:aws:apigateway:*::/restapis*"
             Effect: Allow
           - Action:
             - codedeploy:*
