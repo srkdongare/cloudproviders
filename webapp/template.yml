@@ -30,34 +30,7 @@ Resources:
             Method: GET
             RestApiId:
               Ref: MyApi
-        GetSingleProductsAPI:
-          Type: Api
-          Properties:
-            Path: /products/{productId}
-            Method: GET
-            RestApiId:
-              Ref: MyApi
-        PostProductsAPI:
-          Type: Api
-          Properties:
-            Path: /products
-            Method: POST
-            RestApiId:
-              Ref: MyApi
-        PutProductsAPI:
-          Type: Api
-          Properties:
-            Path: /products/{productId}
-            Method: PUT
-            RestApiId:
-              Ref: MyApi
-        DeleteProductsAPI:
-          Type: Api
-          Properties:
-            Path: /products/{productId}
-            Method: DELETE
-            RestApiId:
-              Ref: MyApi
+      
   MyApi:
     Type: AWS::Serverless::Api
     Properties:

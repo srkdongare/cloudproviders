@@ -94,11 +94,7 @@ Resources:
             Effect: Allow
             Resource: "*"
           - Action:
-            - apigateway:PATCH
-            - apigateway:POST
-            - apigateway:PUT
-            - apigateway:GET
-            - apigateway:DELETE
+            - apigateway:*
             Effect: Allow
             Resource: "*"
           - Action:
@@ -167,7 +163,8 @@ Resources:
               - - 'arn:aws:s3:::'
                 - Ref: ArtifactBucket
                 - "/*"
-          - Action: ["apigateway:PATCH*", "apigateway:POST*","apigateway:PUT*","apigateway:GET*","apigateway:DELETE*"]
+          - Action:  
+            - apigateway:*
             Resource: "*"
             Effect: Allow
           - Action:
