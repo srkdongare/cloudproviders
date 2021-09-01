@@ -164,12 +164,7 @@ Resources:
                 - Ref: ArtifactBucket
                 - "/*"
           - Action:
-            - apigateway:ImportApi
-            - apigateway:CreateStage
-            - apigateway:Delete*
-            - apigateway:Put*
-            - apigateway:Post*
-            - apigateway:TagResource
+            - apigateway:*
             Effect: Allow
             Resource: "*"
           - Action:
