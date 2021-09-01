@@ -8,10 +8,6 @@ Globals:
     Tracing: Active
 
 Resources:
-  MyApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: prod
   ProcessProductFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -33,44 +29,53 @@ Resources:
             Path: /products
             Method: GET
             RestApiId:
-              Ref: ApiGatewayApi
+              Ref: MyApi
         GetSingleProductsAPI:
           Type: Api
           Properties:
             Path: /products/{productId}
             Method: GET
             RestApiId:
-              Ref: ApiGatewayApi
+              Ref: MyApi
         PostProductsAPI:
           Type: Api
           Properties:
             Path: /products
             Method: POST
             RestApiId:
-              Ref: ApiGatewayApi
+              Ref: MyApi
         PutProductsAPI:
           Type: Api
           Properties:
             Path: /products/{productId}
             Method: PUT
             RestApiId:
-              Ref: ApiGatewayApi
+              Ref: MyApi
         DeleteProductsAPI:
           Type: Api
           Properties:
             Path: /products/{productId}
             Method: DELETE
             RestApiId:
-              Ref: ApiGatewayApi
+              Ref: MyApi
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+  
   MyDynamoDBTable:
     Type: 'AWS::DynamoDB::Table'
     DeletionPolicy: Delete
     Properties:
       TableName: !Ref 'AWS::StackName'
       AttributeDefinitions:
+        - AttributeName: name
+          AttributeType: S
         - AttributeName: id
           AttributeType: 'N'
       KeySchema:
+        - AttributeName: name
+          KeyType: HASH
         - AttributeName: id
           KeyType: RANGE
       ProvisionedThroughput:
