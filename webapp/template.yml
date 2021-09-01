@@ -8,10 +8,15 @@ Globals:
     Tracing: Active
 
 Resources:
-  ProcessCoffeeFunction:
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+  
+  ProcessProductFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Handler: coffee/process-coffee
+      Handler: product/process-product
       Runtime: go1.x
       MemorySize: 128
       Policies:
@@ -22,19 +27,47 @@ Resources:
           TABLE_NAME: !Ref MyDynamoDBTable
           REGION: !Ref 'AWS::Region'
       Events:
-        GetCoffeeFunctionApi:
-          Type: HttpApi
+        # Products
+        GetProductsAPI:
+          Type: Api
           Properties:
-            Path: /coffee
-            Method: get
-            ApiId: !Ref MyApi
-        PostCoffeeFunctionApi:
-          Type: HttpApi
+            Path: /products
+            Method: GET
+            RestApiId:
+              Ref: ApiGatewayApi
+
+        GetSingleProductsAPI:
+          Type: Api
           Properties:
-            Path: '/coffee/{id}'
-            Method: post
-            ApiId: !Ref MyApi
-      Description: Get data from DynamoDB table
+            Path: /products/{productId}
+            Method: GET
+            RestApiId:
+              Ref: ApiGatewayApi
+
+        PostProductsAPI:
+          Type: Api
+          Properties:
+            Path: /products
+            Method: POST
+            RestApiId:
+              Ref: ApiGatewayApi
+
+        PutProductsAPI:
+          Type: Api
+          Properties:
+            Path: /products/{productId}
+            Method: PUT
+            RestApiId:
+              Ref: ApiGatewayApi
+
+        DeleteProductsAPI:
+          Type: Api
+          Properties:
+            Path: /products/{productId}
+            Method: DELETE
+            RestApiId:
+              Ref: ApiGatewayApi
+
   
   MyDynamoDBTable:
     Type: 'AWS::DynamoDB::Table'
@@ -42,25 +75,16 @@ Resources:
     Properties:
       TableName: !Ref 'AWS::StackName'
       AttributeDefinitions:
-        - AttributeName: type
-          AttributeType: S
         - AttributeName: id
           AttributeType: 'N'
       KeySchema:
-        - AttributeName: type
-          KeyType: HASH
         - AttributeName: id
           KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
    
-  MyApi:
-    Type: 'AWS::Serverless::HttpApi'
-    Properties:
-      CorsConfiguration:
-        AllowOrigins:
-          - '*'
+  
       
 Outputs:
   GetCoffeeFunctionApi:
@@ -69,7 +93,7 @@ Outputs:
   LambdaFunctionUrl:
     Description: URL for Lambda Get Function
     Value: !Sub >-
-      https://console.aws.amazon.com/lambda/home?region=${AWS::Region}#/functions/${ProcessCoffeeFunction}/aliases/live?tab=configuration
+      https://console.aws.amazon.com/lambda/home?region=${AWS::Region}#/functions/${ProcessProductFunction}/aliases/live?tab=configuration
   CodeDeployUrl:
     Description: URL for CodeDeploy Deployments
     Value: !Sub >-

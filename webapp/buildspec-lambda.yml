@@ -10,7 +10,7 @@ phases:
   build:
     commands:
       # Build our go application
-      - cd webapp/src/coffee
+      - cd webapp/src/product
       - go build -o main
       - cd ../../..
 
