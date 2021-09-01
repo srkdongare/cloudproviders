@@ -26,7 +26,7 @@ Resources:
         GetProductsAPI:
           Type: Api
           Properties:
-            Path: /products
+            Path: /api/products
             Method: GET
             RestApiId:
               Ref: MyApi
