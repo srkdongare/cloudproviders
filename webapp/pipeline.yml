@@ -94,10 +94,7 @@ Resources:
             Effect: Allow
             Resource: "*"
           - Action:
-            - apigateway:DeleteApi
-            - apigateway:DeleteStage
-            - apigateway:CreateStage
-            - apigateway:ImportApi
+            - apigateway:*
             Effect: Allow
             Resource: "*"
           - Action:
