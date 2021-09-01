@@ -75,7 +75,7 @@ Resources:
           AttributeType: 'N'
       KeySchema:
         - AttributeName: name
-          KeyType: RANGE
+          KeyType: HASH
         - AttributeName: id
           KeyType: RANGE
       ProvisionedThroughput:
