@@ -163,10 +163,9 @@ Resources:
               - - 'arn:aws:s3:::'
                 - Ref: ArtifactBucket
                 - "/*"
-          - Action:
-            - apigateway:*
+          - Action: ["apigateway:*"]
+            Resource: !Sub "arn:aws:apigateway:${AWS::Region}::*"
             Effect: Allow
-            Resource: "*"
           - Action:
             - codedeploy:*
             Effect: Allow
