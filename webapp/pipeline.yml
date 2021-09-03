@@ -94,9 +94,13 @@ Resources:
             Effect: Allow
             Resource: "*"
           - Action:
+            - apigateway:Put*
             - apigateway:*
+            - apigateway:Delete*
+            - apigateway:PATCH*
+            - apigateway:Post*
             Effect: Allow
-            Resource: "arn:aws:apigateway:*::/restapis*"
+            Resource: "*"
           - Action:
             - dynamodb:CreateTable
             - dynamodb:DeleteTable
@@ -164,8 +168,12 @@ Resources:
                 - Ref: ArtifactBucket
                 - "/*"
           - Action:  
+            - apigateway:Put*
             - apigateway:*
-            Resource: "arn:aws:apigateway:*::/restapis*"
+            - apigateway:Delete*
+            - apigateway:PATCH*
+            - apigateway:Post*
+            Resource: "*"
             Effect: Allow
           - Action:
             - codedeploy:*
