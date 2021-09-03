@@ -11,7 +11,7 @@ phases:
     commands:
       # Build our go application
       - cd webapp/src/product
-      - go build -o main process-product.go products.go
+      - go build -o main *.go
       - cd ../../..
 
       # Package our application with AWS SAM
