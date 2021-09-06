@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
 func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -52,7 +52,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 }
 
 func main() {
-	//lambda.Start(Handler)
-	timeNow := time.Now()
-	fmt.Println(timeNow)
+	lambda.Start(Handler)
+	// timeNow := time.Now()
+	// fmt.Println(timeNow)
 }
