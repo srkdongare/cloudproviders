@@ -15,7 +15,7 @@ phases:
     commands:
       # Build our go application
       - cd webapp/src/product
-      - GOOS=linux go build -ldflags="-s -w" -o bin/processProduct process-product.go
+      - GOOS=linux go build -ldflags="-s -w" -o main *.go
       - cd ../../..
 
       # Package our application with AWS SAM

@@ -11,7 +11,7 @@ Resources:
   ProcessProductFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Handler: product/process-product
+      Handler: webapp/src/product/main
       Runtime: go1.x
       MemorySize: 128
       Policies:
